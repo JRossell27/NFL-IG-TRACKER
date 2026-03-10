@@ -2,6 +2,9 @@
 .env
 *.env
 
+# Streamlit secrets (keep the .example, ignore the real one)
+.streamlit/secrets.toml
+
 # Database
 data/
 *.db

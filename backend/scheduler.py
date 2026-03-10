@@ -6,14 +6,46 @@ Usage:
     python -m backend.scheduler --once      # single check, then exit
     python -m backend.scheduler --seed      # seed the DB, then exit
     python -m backend.scheduler --post-dry  # dry-run X posting, then exit
+
+Secrets are loaded in this priority order:
+  1. Environment variables already set (e.g. GitHub Actions secrets)
+  2. .streamlit/secrets.toml  (local dev matching Streamlit setup)
+  3. .env file
 """
 import os
 import sys
 import logging
 from datetime import datetime, timezone
+from pathlib import Path
 
-from dotenv import load_dotenv
-load_dotenv()
+
+def _load_secrets():
+    """Load credentials from .streamlit/secrets.toml then .env (both optional)."""
+    # Try .streamlit/secrets.toml first
+    secrets_file = Path(__file__).parent.parent / '.streamlit' / 'secrets.toml'
+    if secrets_file.exists():
+        try:
+            try:
+                import tomllib
+            except ImportError:
+                import tomli as tomllib  # pip install tomli on Python < 3.11
+            with open(secrets_file, 'rb') as f:
+                secrets = tomllib.load(f)
+            for k, v in secrets.items():
+                if isinstance(v, str):
+                    os.environ.setdefault(k, v)
+        except Exception as e:
+            print(f"Warning: could not parse secrets.toml: {e}")
+
+    # Also load .env (values already in env take priority via setdefault above)
+    try:
+        from dotenv import load_dotenv
+        load_dotenv()
+    except ImportError:
+        pass
+
+
+_load_secrets()
 
 from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.triggers.interval import IntervalTrigger
@@ -26,13 +58,7 @@ from backend.x_poster import post_pending_events
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
-    handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler(
-            os.path.join(os.path.dirname(__file__), '..', 'logs', 'scheduler.log'),
-            encoding='utf-8',
-        ),
-    ],
+    handlers=[logging.StreamHandler()],
 )
 logger = logging.getLogger(__name__)
 
@@ -65,10 +91,7 @@ def run_tracking_job():
 def main():
     args = sys.argv[1:]
 
-    # Ensure DB and log directory exist
-    os.makedirs(os.path.join(os.path.dirname(__file__), '..', 'data'), exist_ok=True)
-    os.makedirs(os.path.join(os.path.dirname(__file__), '..', 'logs'), exist_ok=True)
-    init_db()
+    init_db()  # no-op for Supabase, keeps interface consistent
 
     if '--seed' in args:
         seed_players()

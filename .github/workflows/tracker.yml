@@ -1,0 +1,45 @@
+name: NFL Instagram Tracker
+
+on:
+  schedule:
+    # Runs every 6 hours: midnight, 6am, noon, 6pm UTC
+    - cron: '0 0,6,12,18 * * *'
+  workflow_dispatch:
+    # Allows you to trigger it manually from GitHub → Actions tab
+
+jobs:
+  track-and-post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Seed players (first run only — safe to re-run)
+        env:
+          SUPABASE_URL:          ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY:  ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python -m backend.scheduler --seed
+
+      - name: Run tracker + post to X
+        env:
+          SUPABASE_URL:            ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY:    ${{ secrets.SUPABASE_SERVICE_KEY }}
+          INSTAGRAM_USERNAME:      ${{ secrets.INSTAGRAM_USERNAME }}
+          INSTAGRAM_PASSWORD:      ${{ secrets.INSTAGRAM_PASSWORD }}
+          X_API_KEY:               ${{ secrets.X_API_KEY }}
+          X_API_KEY_SECRET:        ${{ secrets.X_API_KEY_SECRET }}
+          X_ACCESS_TOKEN:          ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_TOKEN_SECRET:   ${{ secrets.X_ACCESS_TOKEN_SECRET }}
+          MAX_X_POSTS_PER_DAY:     "17"
+        run: python -m backend.scheduler --once
