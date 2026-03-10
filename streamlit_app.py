@@ -3,6 +3,9 @@ NFL IG Tracker — Streamlit Web App
 Companion website for the automated X bot.
 """
 import os
+import threading
+import time
+import requests as _requests
 from datetime import datetime, timezone
 
 import streamlit as st
@@ -11,6 +14,31 @@ import streamlit as st
 for _k, _v in st.secrets.items():
     if isinstance(_v, str):
         os.environ.setdefault(_k, _v)
+
+# ── Keep-alive ping (prevents Streamlit Cloud from sleeping) ──────────────
+_ping_started = False
+
+def _start_keep_alive():
+    global _ping_started
+    if _ping_started:
+        return
+    url = os.environ.get("STREAMLIT_APP_URL", "")
+    if not url:
+        return
+    _ping_started = True
+
+    def _ping():
+        while True:
+            time.sleep(300)  # ping every 5 minutes
+            try:
+                _requests.get(url, timeout=10)
+            except Exception:
+                pass
+
+    t = threading.Thread(target=_ping, daemon=True)
+    t.start()
+
+_start_keep_alive()
 
 from backend import database as db
 
@@ -253,7 +281,7 @@ with st.sidebar:
             st.cache_data.clear()
 
     st.divider()
-    st.caption("Data refreshes every 6 hours via GitHub Actions.\nFollow us on X @NFLIGTracker")
+    st.caption("Data refreshes every 4 hours via GitHub Actions.\nFollow us on X @NFLIGTracker")
 
 
 # ── Main content ──────────────────────────────────────────────────────────
@@ -320,3 +348,9 @@ else:
             st.session_state.event_limit += 50
             st.cache_data.clear()
             st.rerun()
+
+# ── Auto-refresh every 60 seconds ────────────────────────────────────────
+st.markdown(
+    '<meta http-equiv="refresh" content="60">',
+    unsafe_allow_html=True,
+)

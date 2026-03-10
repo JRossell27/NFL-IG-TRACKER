@@ -3,7 +3,7 @@ name: NFL Instagram Tracker
 on:
   schedule:
     # Runs every 6 hours: midnight, 6am, noon, 6pm UTC
-    - cron: '0 0,6,12,18 * * *'
+    - cron: '0 */4 * * *'
   workflow_dispatch:
     # Allows you to trigger it manually from GitHub → Actions tab
 
