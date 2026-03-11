@@ -25,13 +25,25 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements-scheduler.txt
 
-      - name: Seed players (first run only — safe to re-run)
+      - name: Validate required secrets
         env:
-          SUPABASE_URL:          ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_KEY:  ${{ secrets.SUPABASE_SERVICE_KEY }}
-        run: python -m backend.scheduler --seed
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          missing=""
+          [ -z "$SUPABASE_URL" ]         && missing="$missing\n  • SUPABASE_URL"
+          [ -z "$SUPABASE_SERVICE_KEY" ] && missing="$missing\n  • SUPABASE_SERVICE_KEY"
+          if [ -n "$missing" ]; then
+            echo "❌ Missing GitHub repository secrets:$missing"
+            echo ""
+            echo "Fix: Go to your repo → Settings → Secrets and variables"
+            echo "     → Actions → New repository secret"
+            echo "     Add each key listed above with the values from your Supabase project."
+            exit 1
+          fi
+          echo "✅ Required secrets are present."
 
-      - name: Run tracker + post to X
+      - name: Seed players + run tracker + post to X
         env:
           SUPABASE_URL:            ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY:    ${{ secrets.SUPABASE_SERVICE_KEY }}
@@ -42,4 +54,6 @@ jobs:
           X_ACCESS_TOKEN:          ${{ secrets.X_ACCESS_TOKEN }}
           X_ACCESS_TOKEN_SECRET:   ${{ secrets.X_ACCESS_TOKEN_SECRET }}
           MAX_X_POSTS_PER_DAY:     "17"
-        run: python -m backend.scheduler --once
+        run: |
+          python -m backend.scheduler --seed
+          python -m backend.scheduler --once

@@ -113,3 +113,30 @@ def post_pending_events(dry_run: bool = False) -> int:
 
     logger.info(f"X posting done: {posted_count} new posts ({posted_today + posted_count}/{max_per_day} today)")
     return posted_count
+
+
+def preview_pending_tweets() -> list[dict]:
+    """
+    Return formatted tweet previews for all unposted events without posting
+    or marking anything.  Used by the Streamlit admin panel.
+
+    Returns a list of dicts:
+        {"tweet": str, "event_id": int, "player": str, "event_type": str}
+    """
+    max_per_day = int(os.environ.get("MAX_X_POSTS_PER_DAY", "17"))
+    posted_today = db.count_x_posts_today()
+    remaining = max_per_day - posted_today
+
+    events = db.get_unposted_events(limit=50)  # show up to 50 in preview
+    previews = []
+    for i, event in enumerate(events):
+        tweet_text = _format_tweet(event)
+        would_post = i < remaining
+        previews.append({
+            "tweet": tweet_text,
+            "event_id": event["id"],
+            "player": event.get("player_name", ""),
+            "event_type": event.get("event_type", ""),
+            "would_post": would_post,
+        })
+    return previews

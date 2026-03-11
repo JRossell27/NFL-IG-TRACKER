@@ -281,7 +281,15 @@ with st.sidebar:
             st.cache_data.clear()
 
     st.divider()
-    st.caption("Data refreshes every 4 hours via GitHub Actions.\nFollow us on X @NFLIGTracker")
+    st.markdown(
+        '<p style="color:#64748b;font-size:0.72rem;line-height:1.5">'
+        '🔄 <b style="color:#94a3b8">Site</b> re-checks the database every 60 s — '
+        'new events appear here within a minute of being detected.<br>'
+        '📸 <b style="color:#94a3b8">Instagram scraping</b> runs every 4 h via GitHub Actions.<br>'
+        '🐦 <b style="color:#94a3b8">X posts</b> sent after each scrape (max 17/day).'
+        '</p>',
+        unsafe_allow_html=True,
+    )
 
 
 # ── Main content ──────────────────────────────────────────────────────────
@@ -348,6 +356,52 @@ else:
             st.session_state.event_limit += 50
             st.cache_data.clear()
             st.rerun()
+
+# ── Admin panel (X post preview / test) ──────────────────────────────────
+st.divider()
+with st.expander("🔧 Admin — Test X Posting", expanded=False):
+    admin_pw = os.environ.get("ADMIN_PASSWORD", "")
+    entered_pw = st.text_input("Admin password", type="password", key="admin_pw")
+
+    if not admin_pw:
+        st.warning("ADMIN_PASSWORD is not set in secrets. Add it to enable this panel.")
+    elif entered_pw and entered_pw != admin_pw:
+        st.error("Incorrect password.")
+    elif entered_pw == admin_pw:
+        st.success("Access granted.")
+
+        col_a, col_b = st.columns(2)
+        with col_a:
+            if st.button("Preview pending tweets", use_container_width=True):
+                try:
+                    from backend.x_poster import preview_pending_tweets
+                    previews = preview_pending_tweets()
+                    if not previews:
+                        st.info("No unposted events queued right now.")
+                    else:
+                        st.markdown(f"**{len(previews)} pending tweet(s):**")
+                        for p in previews:
+                            badge = "🟢 Would post" if p["would_post"] else "🔴 Over daily cap"
+                            st.markdown(
+                                f'<div style="background:#0f1524;border:1px solid #252d42;'
+                                f'border-left:3px solid {"#10b981" if p["would_post"] else "#ef4444"};'
+                                f'border-radius:8px;padding:12px;margin-bottom:8px;font-size:0.85rem">'
+                                f'<span style="color:#64748b;font-size:0.7rem">{badge}</span><br>'
+                                f'<pre style="color:#e2e8f0;white-space:pre-wrap;margin:6px 0 0">'
+                                f'{p["tweet"]}</pre></div>',
+                                unsafe_allow_html=True,
+                            )
+                except Exception as e:
+                    st.error(f"Error: {e}")
+
+        with col_b:
+            st.markdown(
+                '<p style="color:#64748b;font-size:0.8rem">'
+                'Preview shows what tweets would be sent on the next run.<br>'
+                'Green = within daily cap · Red = would be skipped.<br>'
+                'No events are posted or marked when previewing.</p>',
+                unsafe_allow_html=True,
+            )
 
 # ── Auto-refresh every 60 seconds ────────────────────────────────────────
 st.markdown(
