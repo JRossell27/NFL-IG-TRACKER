@@ -370,8 +370,42 @@ with st.expander("🔧 Admin — Test X Posting", expanded=False):
     elif entered_pw == admin_pw:
         st.success("Access granted.")
 
-        from backend.x_poster import preview_pending_tweets, post_pending_events
+        from backend.x_poster import preview_pending_tweets, post_pending_events, post_test_tweet
 
+        # ── Test X API connection ─────────────────────────────────────
+        st.markdown("#### Test X API connection")
+        st.caption("Send any custom tweet to verify your X credentials are working.")
+        test_text = st.text_area(
+            "Tweet text",
+            placeholder="Type anything here to test posting to X…",
+            max_chars=280,
+            key="test_tweet_text",
+            height=100,
+        )
+        char_count = len(test_text) if test_text else 0
+        col_char, col_btn = st.columns([3, 1])
+        with col_char:
+            color = "#ef4444" if char_count > 260 else "#94a3b8"
+            st.markdown(
+                f'<p style="color:{color};font-size:0.75rem;margin:0">'
+                f'{char_count}/280 characters</p>',
+                unsafe_allow_html=True,
+            )
+        with col_btn:
+            if st.button("🧪 Send test tweet", use_container_width=True):
+                if not test_text or not test_text.strip():
+                    st.warning("Enter some text first.")
+                else:
+                    try:
+                        tweet_id = post_test_tweet(test_text)
+                        st.success(f"✅ Posted! Tweet ID: `{tweet_id}`")
+                    except Exception as e:
+                        st.error(f"Failed: {e}")
+
+        st.divider()
+
+        # ── Pending tweet preview / bulk post ─────────────────────────
+        st.markdown("#### Pending events queue")
         col_a, col_b = st.columns(2)
         with col_a:
             if st.button("🔍 Preview pending tweets", use_container_width=True):

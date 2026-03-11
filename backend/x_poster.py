@@ -173,6 +173,19 @@ def post_pending_events(dry_run: bool = False) -> int:
     return posted_count
 
 
+def post_test_tweet(text: str) -> str:
+    """
+    Post a single arbitrary tweet for API connection testing.
+    Returns the tweet ID on success, raises on failure.
+    Used by the Streamlit admin panel.
+    """
+    if not text or not text.strip():
+        raise ValueError("Tweet text cannot be empty.")
+    if len(text) > 280:
+        raise ValueError(f"Tweet text is {len(text)} chars — max is 280.")
+    return _post_tweet(text.strip())
+
+
 def preview_pending_tweets() -> list[dict]:
     """
     Return formatted tweet previews for all pending unposted events.
