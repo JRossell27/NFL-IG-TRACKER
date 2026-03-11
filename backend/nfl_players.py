@@ -127,7 +127,7 @@ NFL_PLAYERS = [
     {"name": "Denzel Ward",            "team": "Cleveland Browns",        "position": "CB",  "ig_handle": "denzelward21"},
     {"name": "Juan Thornhill",         "team": "Cleveland Browns",        "position": "S",   "ig_handle": "juanthornhill22"},
     {"name": "Dalvin Tomlinson",       "team": "Cleveland Browns",        "position": "DT",  "ig_handle": "dalvintomlinson"},
-    {"name": "Joe Flacco",             "team": "Cleveland Browns",        "position": "QB",  "ig_handle": "joeflacco5"},
+    {"name": "Joe Flacco",             "team": "Cleveland Browns",        "position": "QB",  "ig_handle": "joeflacco5"},  # also backed up for Colts in 2024
 
     # ── Pittsburgh Steelers ───────────────────────────────────────────────
     {"name": "Russell Wilson",         "team": "Pittsburgh Steelers",     "position": "QB",  "ig_handle": "dangerrusswilson"},
@@ -167,7 +167,7 @@ NFL_PLAYERS = [
 
     # ── Indianapolis Colts ────────────────────────────────────────────────
     {"name": "Anthony Richardson",    "team": "Indianapolis Colts",      "position": "QB",  "ig_handle": "antr_5"},
-    {"name": "Joe Flacco",             "team": "Indianapolis Colts",      "position": "QB",  "ig_handle": "joeflacco5"},
+    # Joe Flacco — tracked under Cleveland Browns above
     {"name": "Michael Pittman Jr.",   "team": "Indianapolis Colts",      "position": "WR",  "ig_handle": "mpittmanjr"},
     {"name": "Josh Downs",             "team": "Indianapolis Colts",      "position": "WR",  "ig_handle": "joshuadowns9"},
     {"name": "Adonai Mitchell",        "team": "Indianapolis Colts",      "position": "WR",  "ig_handle": "adonaimitch"},
@@ -367,7 +367,7 @@ NFL_PLAYERS = [
     {"name": "Khalil Herbert",         "team": "Chicago Bears",           "position": "RB",  "ig_handle": "khalilherbert"},
     {"name": "Braxton Jones",          "team": "Chicago Bears",           "position": "OT",  "ig_handle": "braxtonjones76"},
     {"name": "Montez Sweat",           "team": "Chicago Bears",           "position": "DE",  "ig_handle": "montezsweat9"},
-    {"name": "Grady Jarrett",          "team": "Chicago Bears",           "position": "DT",  "ig_handle": "gradyjarrett"},
+    # Grady Jarrett — tracked under Atlanta Falcons below
     {"name": "Tremaine Edmunds",       "team": "Chicago Bears",           "position": "LB",  "ig_handle": "tremaineedmunds49"},
     {"name": "Jaylon Johnson",         "team": "Chicago Bears",           "position": "CB",  "ig_handle": "jaylonj2"},
     {"name": "Kevin Byard",            "team": "Chicago Bears",           "position": "S",   "ig_handle": "byard31"},
