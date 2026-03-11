@@ -370,38 +370,60 @@ with st.expander("🔧 Admin — Test X Posting", expanded=False):
     elif entered_pw == admin_pw:
         st.success("Access granted.")
 
+        from backend.x_poster import preview_pending_tweets, post_pending_events
+
         col_a, col_b = st.columns(2)
         with col_a:
-            if st.button("Preview pending tweets", use_container_width=True):
+            if st.button("🔍 Preview pending tweets", use_container_width=True):
                 try:
-                    from backend.x_poster import preview_pending_tweets
                     previews = preview_pending_tweets()
-                    if not previews:
-                        st.info("No unposted events queued right now.")
-                    else:
-                        st.markdown(f"**{len(previews)} pending tweet(s):**")
-                        for p in previews:
-                            badge = "🟢 Would post" if p["would_post"] else "🔴 Over daily cap"
-                            st.markdown(
-                                f'<div style="background:#0f1524;border:1px solid #252d42;'
-                                f'border-left:3px solid {"#10b981" if p["would_post"] else "#ef4444"};'
-                                f'border-radius:8px;padding:12px;margin-bottom:8px;font-size:0.85rem">'
-                                f'<span style="color:#64748b;font-size:0.7rem">{badge}</span><br>'
-                                f'<pre style="color:#e2e8f0;white-space:pre-wrap;margin:6px 0 0">'
-                                f'{p["tweet"]}</pre></div>',
-                                unsafe_allow_html=True,
-                            )
+                    st.session_state["tweet_previews"] = previews
                 except Exception as e:
-                    st.error(f"Error: {e}")
+                    st.error(f"Error loading previews: {e}")
+
+            if st.button("🚀 Post tweets NOW (real)", use_container_width=True, type="primary"):
+                if not st.session_state.get("post_confirm"):
+                    st.session_state["post_confirm"] = True
+                    st.warning("Click **Post tweets NOW** again to confirm — this will publish real tweets.")
+                else:
+                    st.session_state["post_confirm"] = False
+                    try:
+                        count = post_pending_events(dry_run=False)
+                        if count:
+                            st.success(f"✅ Posted {count} tweet(s) to X!")
+                        else:
+                            st.info("Nothing to post (no pending events or daily cap reached).")
+                        st.cache_data.clear()
+                    except Exception as e:
+                        st.error(f"Post failed: {e}")
 
         with col_b:
             st.markdown(
                 '<p style="color:#64748b;font-size:0.8rem">'
-                'Preview shows what tweets would be sent on the next run.<br>'
-                'Green = within daily cap · Red = would be skipped.<br>'
-                'No events are posted or marked when previewing.</p>',
+                '<b style="color:#94a3b8">Preview</b> — shows queued tweets, nothing is sent.<br>'
+                '<b style="color:#94a3b8">Post NOW</b> — publishes real tweets immediately '
+                '(requires X API keys in secrets). Click twice to confirm.<br><br>'
+                '🟢 Within daily cap &nbsp;·&nbsp; 🔴 Would be skipped</p>',
                 unsafe_allow_html=True,
             )
+
+        previews = st.session_state.get("tweet_previews")
+        if previews is not None:
+            if not previews:
+                st.info("No unposted events queued right now.")
+            else:
+                st.markdown(f"**{len(previews)} pending tweet(s):**")
+                for p in previews:
+                    badge = "🟢 Would post" if p["would_post"] else "🔴 Over daily cap"
+                    st.markdown(
+                        f'<div style="background:#0f1524;border:1px solid #252d42;'
+                        f'border-left:3px solid {"#10b981" if p["would_post"] else "#ef4444"};'
+                        f'border-radius:8px;padding:12px;margin-bottom:8px;font-size:0.85rem">'
+                        f'<span style="color:#64748b;font-size:0.7rem">{badge}</span><br>'
+                        f'<pre style="color:#e2e8f0;white-space:pre-wrap;margin:6px 0 0">'
+                        f'{p["tweet"]}</pre></div>',
+                        unsafe_allow_html=True,
+                    )
 
 # ── Auto-refresh every 60 seconds ────────────────────────────────────────
 st.markdown(
